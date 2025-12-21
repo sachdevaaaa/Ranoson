@@ -6,6 +6,7 @@ app = FastAPI(title="Ranoson Springs LMS", version="0.1.0")
 
 origins = [
     "http://localhost:3000",
+    "http://localhost:4801",
 ]
 
 app.add_middleware(

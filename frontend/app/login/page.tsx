@@ -1,74 +1,113 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 
-export default function Login() {
-    const router = useRouter();
-    const [employeeCode, setEmployeeCode] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+export default function LoginPage() {
+    const { login } = useAuth();
+    const [employeeCode, setEmployeeCode] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        setError("");
+        setLoading(true);
 
-        // In real implementation:
-        // const res = await fetch('http://localhost:8000/api/v1/auth/login', ...)
-        // if ok, store token and redirect
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4800/api/v1';
+            const res = await fetch(`${apiUrl}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ employee_code: employeeCode, password })
+            });
 
-        // Mock Logic
-        if (employeeCode && password) {
-            // Assume success
-            alert("Login Successful! (Token stored)");
-            router.push('/');
-        } else {
-            setError("Please enter all fields");
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.detail || "Login failed");
+            }
+
+            login(data.access_token);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <main className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl w-full max-w-md shadow-2xl">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Gradients */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100/50 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-100/50 rounded-full blur-[120px]" />
+            </div>
+
+            <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-8 shadow-xl shadow-slate-200/50 relative z-10">
                 <div className="text-center mb-8">
-                    <div className="h-12 w-12 bg-blue-600 rounded-lg mx-auto mb-4 flex items-center justify-center text-white font-bold text-xl">R</div>
-                    <h1 className="text-2xl font-bold text-white">Employee Login</h1>
-                    <p className="text-slate-400">Ranoson Springs LMS</p>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h1>
+                    <p className="text-slate-500">Sign in to access your training dashboard</p>
                 </div>
 
-                {error && <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg mb-4 text-sm">{error}</div>}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700 ml-1">Employee Code</label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="text"
+                                value={employeeCode}
+                                onChange={(e) => setEmployeeCode(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                placeholder="e.g. ADMIN001"
+                                required
+                            />
+                        </div>
+                    </div>
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Employee Code</label>
-                        <input
-                            type="text"
-                            value={employeeCode}
-                            onChange={(e) => setEmployeeCode(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="e.g. EMP001"
-                        />
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700 ml-1">Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                placeholder="••••••••"
+                                required
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="••••••••"
-                        />
-                    </div>
-                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors">
-                        Sign In
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg text-center">
+                            {error}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                    >
+                        {loading ? (
+                            <Loader2 className="animate-spin" size={20} />
+                        ) : (
+                            <>
+                                Sign In <ArrowRight size={20} />
+                            </>
+                        )}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-slate-500">
-                    First time here? <Link href="/register" className="text-blue-400 hover:underline">Activate Account</Link>
+                <div className="mt-8 text-center text-xs text-slate-400">
+                    <p>Protected by Ranoson Springs Security</p>
                 </div>
             </div>
-        </main>
+        </div>
     );
 }

@@ -53,15 +53,17 @@ export default function Dashboard() {
         <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Assigned Training</h2>
         <div className="space-y-3">
           {modules.map((mod) => (
-            <div key={mod.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 active:scale-95 transition-transform">
+            <div key={mod.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4 active:scale-95 transition-transform cursor-pointer hover:border-slate-600">
               <div className="h-12 w-12 bg-blue-600/20 rounded-lg flex items-center justify-center text-blue-500">
                 <PlayCircle size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-white">{mod.title}</h3>
-                <p className={`text-xs ${mod.status === 'In Progress' ? 'text-amber-400' : 'text-slate-500'}`}>
-                  {mod.status}
-                </p>
+                <a href={`/modules/${mod.id}`} className="block">
+                  <h3 className="font-semibold text-white hover:text-blue-400 transition-colors">{mod.title}</h3>
+                  <p className={`text-xs ${mod.status === 'In Progress' ? 'text-amber-400' : 'text-slate-500'}`}>
+                    {mod.status}
+                  </p>
+                </a>
               </div>
             </div>
           ))}

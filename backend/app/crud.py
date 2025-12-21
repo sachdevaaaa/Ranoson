@@ -1,32 +1,20 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from typing import Optional
 
-def get_user_by_role(db: Session, role_name: str):
-    return db.query(models.User).join(models.Role).filter(models.Role.name == role_name).first()
-
-def get_modules_by_role(db: Session, role_id: int):
-    return db.query(models.Module).filter(models.Module.assigned_role_id == role_id).all()
-
-def create_module(db: Session, module: schemas.ModuleCreate):
-    db_module = models.Module(**module.dict())
-    db.add(db_module)
-    db.commit()
-    db.refresh(db_module)
-    return db_module
-
-def get_all_users_with_progress(db: Session):
-    return db.query(models.User).all()
-
+# --- User Management ---
 def get_user_by_code(db: Session, employee_code: str):
     return db.query(models.User).filter(models.User.employee_code == employee_code).first()
 
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.User).offset(skip).limit(limit).all()
+
 def create_user(db: Session, user: schemas.UserCreate):
-    # Admin creating a user (whitelisting)
     db_user = models.User(
         employee_code=user.employee_code,
         role_id=user.role_id,
         phone_number=user.phone_number,
-        is_registered=False # Not registered yet, needs to set password
+        is_registered=False
     )
     db.add(db_user)
     db.commit()
@@ -41,9 +29,117 @@ def register_user(db: Session, db_user: models.User, password: str):
     db.refresh(db_user)
     return db_user
 
-def delete_user(db: Session, user_id: int):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user:
-        db.delete(user)
+# --- Module Management ---
+def create_module_with_steps(db: Session, module: schemas.ModuleCreate, creator_id: int):
+    # 1. Create Module
+    db_module = models.Module(
+        title=module.title,
+        description=module.description,
+        video_url=module.video_url,
+        created_by_id=creator_id
+    )
+    db.add(db_module)
+    db.commit()
+    db.refresh(db_module)
+
+    # 2. Create Steps
+    for step_data in module.steps:
+        db_step = models.ModuleStep(
+            module_id=db_module.id,
+            title=step_data.title,
+            content=step_data.content,
+            media_url=step_data.media_url,
+            step_type=step_data.step_type,
+            order_index=step_data.order_index
+        )
+        db.add(db_step)
         db.commit()
-    return user
+        db.refresh(db_step)
+
+        # 3. Create Assignment if exists
+        if step_data.assignment:
+            db_assign = models.AssignmentQuestion(
+                step_id=db_step.id,
+                question_text=step_data.assignment.question_text,
+                correct_value=step_data.assignment.correct_value,
+                tolerance=step_data.assignment.tolerance,
+                unit=step_data.assignment.unit
+            )
+            db.add(db_assign)
+            db.commit()
+    
+    return db_module
+
+def get_module(db: Session, module_id: int):
+    return db.query(models.Module).filter(models.Module.id == module_id).first()
+
+def get_all_modules(db: Session):
+    return db.query(models.Module).all()
+
+# --- Progress & Validation ---
+def get_user_progress(db: Session, user_id: int, module_id: int):
+    return db.query(models.UserProgress).filter(
+        models.UserProgress.user_id == user_id,
+        models.UserProgress.module_id == module_id
+    ).first()
+
+def validate_step(step: models.ModuleStep, user_value: str) -> bool:
+    if not step.assignment:
+        return True # No assignment, just an instruction step
+    
+    correct = step.assignment.correct_value
+    tolerance = step.assignment.tolerance
+    
+    if tolerance is not None:
+        try:
+            user_float = float(user_value)
+            correct_float = float(correct)
+            return (correct_float - tolerance) <= user_float <= (correct_float + tolerance)
+        except ValueError:
+            return False
+    else:
+        return user_value.strip().lower() == correct.strip().lower()
+
+def update_progress(db: Session, user_id: int, module_id: int, step_index: int, passed: bool):
+    progress = get_user_progress(db, user_id, module_id)
+    if not progress:
+        progress = models.UserProgress(user_id=user_id, module_id=module_id, current_step_index=0, status="In Progress")
+        db.add(progress)
+    
+    if passed:
+        # Move to next step if this was the current step
+        # Note: Logic can be more complex (e.g. only advance if step_index == current)
+        if step_index >= progress.current_step_index:
+             progress.current_step_index = step_index + 1
+    
+    db.commit()
+    db.refresh(progress)
+    return progress
+
+# --- Comments ---
+def create_comment(db: Session, comment: schemas.CommentCreate, user_id: int):
+    db_comment = models.Comment(
+        module_id=comment.module_id,
+        user_id=user_id,
+        text=comment.text,
+        parent_id=comment.parent_id
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+def get_comments_for_module(db: Session, module_id: int):
+    # Fetch top-level comments (frontend can fetch replies recursively or we eager load)
+    return db.query(models.Comment).filter(models.Comment.module_id == module_id, models.Comment.parent_id == None).all()
+
+# --- Learning Resources ---
+def get_all_resources(db: Session):
+    return db.query(models.LearningResource).all()
+
+def create_resource(db: Session, resource: schemas.LearningResourceCreate):
+    db_resource = models.LearningResource(**resource.dict())
+    db.add(db_resource)
+    db.commit()
+    db.refresh(db_resource)
+    return db_resource
