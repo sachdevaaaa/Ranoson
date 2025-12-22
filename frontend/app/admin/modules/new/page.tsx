@@ -46,7 +46,7 @@ export default function CreateModule() {
                 steps: steps
             };
 
-            const res = await fetch('http://localhost:4800/api/v1/modules', {
+            const res = await fetch('http://localhost:8000/api/v1/modules', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

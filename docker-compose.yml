@@ -42,7 +42,7 @@ services:
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4800/api/v1
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     command: npm run dev -- -p 4801
     ports:
       - "4801:4801"

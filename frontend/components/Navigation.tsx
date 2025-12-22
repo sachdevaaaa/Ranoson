@@ -1,46 +1,58 @@
 "use client";
 
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { Home, BookOpen, User, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { PlayCircle, Award, Home, Settings, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Navigation() {
-    const { user } = useAuth();
     const pathname = usePathname();
+    const { user } = useAuth();
 
-    // Hide navigation on login page
+    const navItems = [
+        { name: 'Home', icon: Home, href: '/' },
+        { name: 'Learn', icon: PlayCircle, href: '/learning' },
+        { name: 'Certificates', icon: Award, href: '/certificates' },
+        // Show Admin only if role_id is 1, or just mock functionality for now if auth is mocked
+        // { name: 'Admin', icon: Settings, href: '/admin', adminOnly: true },
+    ];
+
     if (pathname === '/login') return null;
 
-    // Assuming role_id 1 is Admin
-    const isAdmin = user?.role_id === 1;
-
-    const isActive = (path: string) => pathname === path ? "text-blue-600" : "text-slate-500 hover:text-blue-500";
-
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 flex justify-around items-center z-50 safe-area-bottom shadow-lg shadow-slate-200/50">
-            <Link href="/" className={`flex flex-col items-center transition-colors ${isActive('/')}`}>
-                <Home size={24} />
-                <span className="text-[10px] font-medium mt-1">Home</span>
-            </Link>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm sm:max-w-md animate-fade-in-up">
+            <nav className="glass-panel rounded-2xl flex items-center justify-between px-6 py-4 shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href;
 
-            <Link href="/learning" className={`flex flex-col items-center transition-colors ${isActive('/learning')}`}>
-                <BookOpen size={24} />
-                <span className="text-[10px] font-medium mt-1">Learning</span>
-            </Link>
+                    return (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className="group flex flex-col items-center gap-1 relative"
+                        >
+                            <div className={clsx(
+                                "relative flex items-center justify-center p-2 rounded-xl transition-all duration-300",
+                                isActive ? "text-blue-400 bg-white/10 shadow-[0_0_15px_rgba(56,189,248,0.3)]" : "text-slate-400 group-hover:text-white"
+                            )}>
+                                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                            </div>
 
-            {isAdmin && (
-                <Link href="/admin" className={`flex flex-col items-center transition-colors ${isActive('/admin')}`}>
-                    <Settings size={24} />
-                    <span className="text-[10px] font-medium mt-1">Admin</span>
-                </Link>
-            )}
+                            {/* Label for Mobile/Desktop clarity? Optional, sticking to icons for now as per design */}
 
-            <Link href="#" className={`flex flex-col items-center transition-colors ${isActive('/profile')}`}>
-                <User size={24} />
-                <span className="text-[10px] font-medium mt-1">Profile</span>
-            </Link>
-        </nav>
+                        </Link>
+                    );
+                })}
+
+                {/* Profile Link separate or explicitly added */}
+                <button className="group flex flex-col items-center gap-1 relative text-slate-400 hover:text-white transition-colors">
+                    <div className="relative flex items-center justify-center p-2 rounded-xl">
+                        <User size={24} />
+                    </div>
+                </button>
+            </nav>
+        </div>
     );
 }

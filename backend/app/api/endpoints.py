@@ -54,9 +54,24 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.employee_code})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/auth/me", response_model=schemas.User)
+@router.get("/auth/me")
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return current_user
+    try:
+        role_id = getattr(current_user, "role_id", None)
+        if role_id is None:
+            role_id = 0
+
+        safe_user = {
+            "id": getattr(current_user, "id", None),
+            "employee_code": getattr(current_user, "employee_code", None),
+            "full_name": getattr(current_user, "full_name", None) if hasattr(current_user, "full_name") else None,
+            "role_id": int(role_id) if role_id is not None else 0,
+            "is_registered": getattr(current_user, "is_registered", False),
+            "progress": [],
+        }
+        return safe_user
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error preparing user info")
 
 # --- Admin: User Management ---
 
