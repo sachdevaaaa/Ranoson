@@ -23,7 +23,7 @@ export default function Dashboard() {
   useEffect(() => {
     // If real user exists, use their role info if available
     // Mock logic for demo purposes if backend isn't full role-based yet
-    if (user?.role_id === 1) setRole("Admin");
+    if (user?.role_id === 3) setRole("Admin");
 
     // Mock Data mimicking real fetch
     setModules([

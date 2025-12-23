@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         });
     }, []);
 
-    if (user?.role_id !== 1) {
+    if (user?.role_id !== 3) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">
@@ -35,75 +35,83 @@ export default function AdminDashboard() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 p-6 pb-24">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
-                <p className="text-slate-500">Manage users, modules, and system settings.</p>
+        <main className="min-h-screen pb-32 pt-8 px-5 lg:max-w-4xl mx-auto transition-colors duration-300">
+            {/* Header */}
+            <header className="flex justify-between items-end mb-10 animate-fade-in-up">
+                <div>
+                    <p className="text-slate-400 text-lg font-medium tracking-wide mb-1 opacity-90">Welcome back</p>
+                    <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 text-glow tracking-tight">Admin</h1>
+                    <p className="text-slate-400 mt-2">Manage users, modules, and system settings.</p>
+                </div>
             </header>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="glass-card p-6 rounded-3xl flex flex-col items-start gap-3 hover:bg-slate-800/60 transition-colors border border-transparent">
+                    <div className="flex items-center justify-between w-full mb-2">
+                        <div className="h-12 w-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/10">
                             <Users size={24} />
                         </div>
-                        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 shadow-sm">+12%</span>
                     </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Total Users</h3>
-                    <p className="text-3xl font-bold text-slate-900">{stats.totalUsers}</p>
+                    <h3 className="text-slate-400 text-sm font-medium tracking-wide">Total Users</h3>
+                    <p className="text-4xl font-bold text-white tracking-tight">{stats.totalUsers}</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-purple-50 p-3 rounded-xl text-purple-600">
+                <div className="glass-card p-6 rounded-3xl flex flex-col items-start gap-3 hover:bg-slate-800/60 transition-colors border border-transparent">
+                    <div className="flex items-center justify-between w-full mb-2">
+                        <div className="h-12 w-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shadow-lg shadow-purple-500/10">
                             <BookOpen size={24} />
                         </div>
-                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">New</span>
+                        <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 shadow-sm">New</span>
                     </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Total Modules</h3>
-                    <p className="text-3xl font-bold text-slate-900">{stats.totalModules}</p>
+                    <h3 className="text-slate-400 text-sm font-medium tracking-wide">Total Modules</h3>
+                    <p className="text-4xl font-bold text-white tracking-tight">{stats.totalModules}</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="bg-orange-50 p-3 rounded-xl text-orange-600">
+                <div className="glass-card p-6 rounded-3xl flex flex-col items-start gap-3 hover:bg-slate-800/60 transition-colors border border-transparent">
+                    <div className="flex items-center justify-between w-full mb-2">
+                        <div className="h-12 w-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/10">
                             <Activity size={24} />
                         </div>
-                        <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-full">Now</span>
+                        <span className="text-[10px] font-bold text-slate-300 bg-slate-700/50 px-2.5 py-1 rounded-lg border border-slate-600/50 shadow-sm">Now</span>
                     </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Active Users</h3>
-                    <p className="text-3xl font-bold text-slate-900">{stats.activeUsers}</p>
+                    <h3 className="text-slate-400 text-sm font-medium tracking-wide">Active Users</h3>
+                    <p className="text-4xl font-bold text-white tracking-tight">{stats.activeUsers}</p>
                 </div>
             </div>
 
             {/* Quick Actions */}
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link href="/admin/modules/new" className="group bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-all border border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-blue-600 text-white p-3 rounded-xl group-hover:scale-110 transition-transform">
-                            <Plus size={24} />
+            <h2 className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mb-5 ml-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <Link href="/admin/modules/new" className="group glass-card p-6 rounded-3xl flex items-center justify-between hover:bg-slate-800/60 transition-all duration-300 border border-transparent hover:border-slate-700/50 hover:shadow-xl hover:-translate-y-1">
+                    <div className="flex items-center gap-5">
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                            <Plus size={28} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900">Create New Module</h3>
-                            <p className="text-sm text-slate-500">Add video content and interactive steps</p>
+                            <h3 className="font-bold text-xl text-white group-hover:text-blue-300 transition-colors">Create Module</h3>
+                            <p className="text-sm text-slate-400">Add video content & steps</p>
                         </div>
                     </div>
-                    <ArrowRight className="text-slate-300 group-hover:text-blue-600 transition-colors" />
+                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-500/20 group-hover:text-blue-300 transition-all">
+                        <ArrowRight size={20} />
+                    </div>
                 </Link>
 
-                <Link href="/admin/users" className="group bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-all border border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-slate-900 text-white p-3 rounded-xl group-hover:scale-110 transition-transform">
-                            <Users size={24} />
+                <Link href="/admin/users" className="group glass-card p-6 rounded-3xl flex items-center justify-between hover:bg-slate-800/60 transition-all duration-300 border border-transparent hover:border-slate-700/50 hover:shadow-xl hover:-translate-y-1">
+                    <div className="flex items-center gap-5">
+                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 text-slate-300 flex items-center justify-center shadow-lg shadow-black/20 group-hover:scale-110 transition-transform duration-300 border border-slate-600">
+                            <Users size={28} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900">Manage Users</h3>
-                            <p className="text-sm text-slate-500">Add users and assign roles</p>
+                            <h3 className="font-bold text-xl text-white group-hover:text-slate-300 transition-colors">Manage Users</h3>
+                            <p className="text-sm text-slate-400">Add users & assign roles</p>
                         </div>
                     </div>
-                    <ArrowRight className="text-slate-300 group-hover:text-slate-900 transition-colors" />
+                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-white/10 group-hover:text-white transition-all">
+                        <ArrowRight size={20} />
+                    </div>
                 </Link>
             </div>
         </main>
