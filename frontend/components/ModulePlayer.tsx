@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { CheckCircle, XCircle, ArrowRight, Play } from 'lucide-react';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 interface Assignment {
   question_text: string;
@@ -19,10 +22,11 @@ interface Step {
 
 interface ModulePlayerProps {
   steps: Step[];
+  videoUrl?: string;
   onStepSubmit: (stepId: number, value: string) => Promise<{ passed: boolean; message: string }>;
 }
 
-export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps) {
+export default function ModulePlayer({ steps, videoUrl, onStepSubmit }: ModulePlayerProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [feedback, setFeedback] = useState<{ passed: boolean; message: string } | null>(null);
@@ -62,7 +66,15 @@ export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps)
     <div className="flex h-[600px] bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
       {/* Left: Media/Context */}
       <div className="w-1/2 bg-black relative flex items-center justify-center">
-        {currentStep.media_url ? (
+        {videoUrl ? (
+          <ReactPlayer
+            url={videoUrl}
+            width="100%"
+            height="100%"
+            controls
+            playing={false}
+          />
+        ) : currentStep.media_url ? (
           <img src={currentStep.media_url} alt={currentStep.title} className="max-w-full max-h-full object-contain" />
         ) : (
           <div className="text-slate-500 flex flex-col items-center">
@@ -70,9 +82,11 @@ export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps)
             <p>No media for this step</p>
           </div>
         )}
-        <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded text-white text-sm">
-          Step {currentStepIndex + 1} of {steps.length}
-        </div>
+        {!videoUrl && (
+          <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded text-white text-sm">
+            Step {currentStepIndex + 1} of {steps.length}
+          </div>
+        )}
       </div>
 
       {/* Right: Instructions & Interaction */}
@@ -101,7 +115,7 @@ export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps)
                   <span className="flex items-center text-slate-400 font-medium">{currentStep.assignment.unit}</span>
                 )}
               </div>
-              
+
               {feedback && (
                 <div className={`mt-3 flex items-center gap-2 text-sm ${feedback.passed ? 'text-green-400' : 'text-red-400'}`}>
                   {feedback.passed ? <CheckCircle size={16} /> : <XCircle size={16} />}
@@ -112,11 +126,10 @@ export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps)
               <button
                 onClick={handleSubmit}
                 disabled={loading || feedback?.passed}
-                className={`mt-4 w-full py-2 rounded font-semibold transition-colors ${
-                  feedback?.passed 
-                    ? 'bg-green-600/20 text-green-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-500 text-white'
-                }`}
+                className={`mt-4 w-full py-2 rounded font-semibold transition-colors ${feedback?.passed
+                  ? 'bg-green-600/20 text-green-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white'
+                  }`}
               >
                 {loading ? "Checking..." : feedback?.passed ? "Completed" : "Submit Answer"}
               </button>
@@ -142,9 +155,9 @@ export default function ModulePlayer({ steps, onStepSubmit }: ModulePlayerProps)
             >
               Previous
             </button>
-            
+
             {feedback?.passed && !isLastStep && (
-               <button
+              <button
                 onClick={handleNext}
                 className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium animate-pulse"
               >

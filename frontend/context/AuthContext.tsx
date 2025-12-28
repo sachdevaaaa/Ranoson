@@ -8,6 +8,7 @@ interface User {
     employee_code: string;
     role_id: number;
     is_active: boolean;
+    progress?: any[]; // Allow progress data
 }
 
 interface AuthContextType {

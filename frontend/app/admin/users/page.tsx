@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { User, Plus, Search, Shield, Trash2 } from 'lucide-react';
+import { User, Plus, Search, Shield, Trash2, BookOpen, X, Check } from 'lucide-react';
 
 interface UserData {
     id: number;
@@ -21,10 +21,17 @@ export default function UserManagement() {
     // Form State
     const [newEmployeeCode, setNewEmployeeCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [newRoleId, setNewRoleId] = useState(1); // Default to Operator (ID 1)
+    const [newRoleId, setNewRoleId] = useState(3); // Default to Operator (ID 3)
+
+    // Assignment State
+    const [modules, setModules] = useState<any[]>([]);
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchUsers();
+        fetchModules();
     }, []);
 
     const fetchUsers = async () => {
@@ -45,6 +52,57 @@ export default function UserManagement() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchModules = async () => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+            const res = await fetch(`${apiUrl}/modules`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setModules(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch modules", error);
+        }
+    };
+
+    const handleAssignModule = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUserId || !selectedModuleId) return;
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+            const res = await fetch(`${apiUrl}/assignments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    user_id: selectedUserId,
+                    module_id: selectedModuleId
+                })
+            });
+
+            if (res.ok) {
+                setShowAssignModal(false);
+                setSelectedUserId(null);
+                setSelectedModuleId(null);
+                alert("Module Assigned Successfully!");
+            } else {
+                alert("Failed to assign module.");
+            }
+        } catch (error) {
+            console.error("Assignment error", error);
+        }
+    };
+
+    const openAssignModal = (userId: number) => {
+        setSelectedUserId(userId);
+        setShowAssignModal(true);
     };
 
     const handleCreateUser = async (e: React.FormEvent) => {
@@ -131,7 +189,7 @@ export default function UserManagement() {
                                     <div className="flex items-center gap-2">
                                         <Shield size={16} className={user.role_id === 1 ? "text-amber-400" : "text-blue-400"} />
                                         <span className="text-slate-400 text-sm font-medium">
-                                            {user.role_id === 3 ? 'Admin' : user.role_id === 2 ? 'Quality Check' : 'Operator'}
+                                            {user.role_id === 1 ? 'Admin' : user.role_id === 2 ? 'Quality Check' : 'Operator'}
                                         </span>
                                     </div>
                                 </td>
@@ -143,6 +201,13 @@ export default function UserManagement() {
                                     </span>
                                 </td>
                                 <td className="p-5 text-right">
+                                    <button
+                                        onClick={() => openAssignModal(user.id)}
+                                        className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all mr-2"
+                                        title="Assign Module"
+                                    >
+                                        <BookOpen size={18} />
+                                    </button>
                                     <button className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
                                         <Trash2 size={18} />
                                     </button>
@@ -168,7 +233,7 @@ export default function UserManagement() {
                                     type="text"
                                     value={newEmployeeCode}
                                     onChange={(e) => setNewEmployeeCode(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors text-slate-900"
                                     required
                                 />
                             </div>
@@ -178,7 +243,7 @@ export default function UserManagement() {
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors text-slate-900"
                                     required
                                 />
                             </div>
@@ -187,11 +252,11 @@ export default function UserManagement() {
                                 <select
                                     value={newRoleId}
                                     onChange={(e) => setNewRoleId(Number(e.target.value))}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors text-slate-900"
                                 >
-                                    <option value={3}>Admin</option>
+                                    <option value={1}>Admin</option>
                                     <option value={2}>Quality Check</option>
-                                    <option value={1}>CNC Operator</option>
+                                    <option value={3}>CNC Operator</option>
                                 </select>
                             </div>
                             <div className="flex gap-3 mt-6">
@@ -213,6 +278,54 @@ export default function UserManagement() {
                     </div>
                 </div>
             )}
-        </main>
+
+            {/* Assign Module Modal */}
+            {
+                showAssignModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in duration-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold text-slate-900">Assign Training Module</h2>
+                                <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-slate-600">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleAssignModule} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Select Module</label>
+                                    <select
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                        onChange={(e) => setSelectedModuleId(Number(e.target.value))}
+                                        value={selectedModuleId || ""}
+                                        required
+                                    >
+                                        <option value="" disabled>Select a module...</option>
+                                        {modules.map(m => (
+                                            <option key={m.id} value={m.id}>{m.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAssignModal(false)}
+                                        className="flex-1 bg-slate-100 text-slate-600 font-medium py-3 rounded-xl hover:bg-slate-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2"
+                                    >
+                                        <Check size={18} /> Assign
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+        </main >
     );
 }

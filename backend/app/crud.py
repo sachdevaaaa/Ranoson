@@ -10,11 +10,17 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
 def create_user(db: Session, user: schemas.UserCreate):
+    from .auth import get_password_hash
+    hashed = None
+    if user.password:
+        hashed = get_password_hash(user.password)
+        
     db_user = models.User(
         employee_code=user.employee_code,
         role_id=user.role_id,
         phone_number=user.phone_number,
-        is_registered=False
+        hashed_password=hashed,
+        is_registered=True if hashed else False
     )
     db.add(db_user)
     db.commit()
@@ -112,6 +118,24 @@ def update_progress(db: Session, user_id: int, module_id: int, step_index: int, 
         if step_index >= progress.current_step_index:
              progress.current_step_index = step_index + 1
     
+    db.commit()
+    db.refresh(progress)
+    return progress
+
+def assign_module_to_user(db: Session, user_id: int, module_id: int):
+    # Check if already assigned
+    existing = get_user_progress(db, user_id, module_id)
+    if existing:
+        return existing
+    
+    # Create new progress entry
+    progress = models.UserProgress(
+        user_id=user_id, 
+        module_id=module_id, 
+        current_step_index=0, 
+        status="Not Started"
+    )
+    db.add(progress)
     db.commit()
     db.refresh(progress)
     return progress

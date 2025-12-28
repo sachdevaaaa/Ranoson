@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { PlayCircle, Award, Clock, Sun, Moon } from 'lucide-react';
+import Link from 'next/link';
 import UserProfile from '@/components/UserProfile';
 import clsx from 'clsx';
 import { useTheme } from '@/context/ThemeContext';
@@ -23,13 +24,21 @@ export default function Dashboard() {
   useEffect(() => {
     // If real user exists, use their role info if available
     // Mock logic for demo purposes if backend isn't full role-based yet
-    if (user?.role_id === 3) setRole("Admin");
+    if (user?.role_id === 1) setRole("Admin");
 
-    // Mock Data mimicking real fetch
-    setModules([
-      { id: 1, title: "Machine Safety Basics", status: "In Progress", progress: 65, duration: "15 min" },
-      { id: 2, title: "Coiling Point Calibration", status: "Pending", progress: 0, duration: "45 min" },
-    ]);
+    // Map real user progress to modules
+    if (user?.progress && user.progress.length > 0) {
+      const realModules = user.progress.map((p: any) => ({
+        id: p.module.id,
+        title: p.module.title,
+        status: p.status,
+        progress: p.status === "Completed" ? 100 : (p.status === "In Progress" ? (p.current_step_index * 10) : 0),
+        duration: "10 min" // Placeholder as duration is not yet in DB
+      }));
+      setModules(realModules);
+    } else {
+      setModules([]);
+    }
   }, [user]);
 
   return (
@@ -88,61 +97,62 @@ export default function Dashboard() {
           {modules.map((mod, idx) => {
             const isInProgress = mod.status === 'In Progress';
             return (
-              <div
-                key={mod.id}
-                className={clsx(
-                  "glass-card p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-5 cursor-pointer group relative overflow-hidden transition-all duration-300 border border-transparent",
-                  isInProgress ? "bg-gradient-to-r from-slate-900/60 to-slate-800/60 border-l-4 border-l-amber-400" : "bg-slate-900/40 hover:bg-slate-800/40"
-                )}
-              >
-                {/* Icon Container */}
-                <div className={clsx(
-                  "h-16 w-16 rounded-2xl flex items-center justify-center transition-colors shadow-lg shrink-0",
-                  isInProgress ? "bg-amber-500/20 text-amber-400 shadow-amber-500/10" : "bg-slate-800 text-slate-400"
-                )}>
-                  {isInProgress ? <PlayCircle size={32} /> : <Clock size={32} />}
-                </div>
+              <Link href={`/modules/${mod.id}`} key={mod.id} className="block">
+                <div
+                  className={clsx(
+                    "glass-card p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-5 cursor-pointer group relative overflow-hidden transition-all duration-300 border border-transparent",
+                    isInProgress ? "bg-gradient-to-r from-slate-900/60 to-slate-800/60 border-l-4 border-l-amber-400" : "bg-slate-900/40 hover:bg-slate-800/40"
+                  )}
+                >
+                  {/* Icon Container */}
+                  <div className={clsx(
+                    "h-16 w-16 rounded-2xl flex items-center justify-center transition-colors shadow-lg shrink-0",
+                    isInProgress ? "bg-amber-500/20 text-amber-400 shadow-amber-500/10" : "bg-slate-800 text-slate-400"
+                  )}>
+                    {isInProgress ? <PlayCircle size={32} /> : <Clock size={32} />}
+                  </div>
 
-                {/* Content */}
-                <div className="flex-1 w-full min-w-0">
-                  <div className="flex justify-between items-start mb-2 gap-4">
-                    <h3 className="font-bold text-xl text-white group-hover:text-blue-300 transition-colors leading-tight">
-                      {mod.title}
-                    </h3>
-                    {isInProgress && (
-                      <span className="text-[10px] font-bold bg-amber-500/15 text-amber-400 px-3 py-1 rounded-md border border-amber-500/20 whitespace-nowrap tracking-wider shadow-sm">
-                        RESUME
+                  {/* Content */}
+                  <div className="flex-1 w-full min-w-0">
+                    <div className="flex justify-between items-start mb-2 gap-4">
+                      <h3 className="font-bold text-xl text-white group-hover:text-blue-300 transition-colors leading-tight">
+                        {mod.title}
+                      </h3>
+                      {isInProgress && (
+                        <span className="text-[10px] font-bold bg-amber-500/15 text-amber-400 px-3 py-1 rounded-md border border-amber-500/20 whitespace-nowrap tracking-wider shadow-sm">
+                          RESUME
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Clock size={14} className="text-slate-500" />
+                        {mod.duration}
                       </span>
+                      <span className="h-1.5 w-1.5 bg-slate-600 rounded-full"></span>
+                      <span className={clsx(
+                        "font-bold uppercase tracking-wide text-xs",
+                        isInProgress ? "text-amber-400" : "text-slate-500"
+                      )}>
+                        {mod.status}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar for In Progress */}
+                    {isInProgress && (
+                      <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.6)] relative" style={{ width: `${mod.progress}%` }}>
+                          <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/50 blur-[2px]" />
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Clock size={14} className="text-slate-500" />
-                      {mod.duration}
-                    </span>
-                    <span className="h-1.5 w-1.5 bg-slate-600 rounded-full"></span>
-                    <span className={clsx(
-                      "font-bold uppercase tracking-wide text-xs",
-                      isInProgress ? "text-amber-400" : "text-slate-500"
-                    )}>
-                      {mod.status}
-                    </span>
-                  </div>
-
-                  {/* Progress Bar for In Progress */}
-                  {isInProgress && (
-                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
-                      <div className="h-full bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.6)] relative" style={{ width: `${mod.progress}%` }}>
-                        <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/50 blur-[2px]" />
-                      </div>
-                    </div>
-                  )}
+                  {/* Hover Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
                 </div>
-
-                {/* Hover Glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-              </div>
+              </Link>
             );
           })}
         </div>

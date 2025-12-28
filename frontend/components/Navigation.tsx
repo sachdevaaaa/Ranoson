@@ -17,7 +17,7 @@ export default function Navigation() {
         { name: 'Certificates', icon: Award, href: '/certificates' },
         // Show Admin only if role_id is 1, or just mock functionality for now if auth is mocked
         // Show Admin only if role_id is 3 (Admin)
-        ...(user?.role_id === 3 ? [{ name: 'Admin', icon: Settings, href: '/admin' }] : []),
+        ...(user?.role_id === 1 ? [{ name: 'Admin', icon: Settings, href: '/admin' }] : []),
     ];
 
     if (pathname === '/login') return null;

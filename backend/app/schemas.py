@@ -107,6 +107,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     role_id: int
+    password: Optional[str] = None
 
 class UserRegister(BaseModel):
     employee_code: str
@@ -121,7 +122,7 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     id: int
-    role_id: int
+    role_id: Optional[int] = None
     is_active: bool
     is_registered: bool
     role: Optional[Role] = None
@@ -148,5 +149,20 @@ class LearningResourceCreate(LearningResourceBase):
 class LearningResource(LearningResourceBase):
     id: int
     created_at: datetime
+    class Config:
+        from_attributes = True
+
+# --- Improved Progress Schemas ---
+class UserProgressWithModule(UserProgress):
+    module: Module
+    class Config:
+        from_attributes = True
+
+class AssignModuleRequest(BaseModel):
+    user_id: int
+    module_id: int
+
+class UserMe(User):
+    progress: List[UserProgressWithModule] = []
     class Config:
         from_attributes = True

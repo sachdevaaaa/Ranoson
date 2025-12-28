@@ -38,6 +38,7 @@ export default function CreateModule() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("Submitting with token:", token);
         try {
             const payload = {
                 title,
@@ -85,7 +86,7 @@ export default function CreateModule() {
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors text-black"
                                 placeholder="e.g. Spring Manufacturing Basics"
                                 required
                             />
@@ -95,7 +96,7 @@ export default function CreateModule() {
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors h-24 resize-none"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors h-24 resize-none text-black"
                                 placeholder="Brief overview of the module..."
                                 required
                             />
@@ -106,7 +107,7 @@ export default function CreateModule() {
                                 type="url"
                                 value={videoUrl}
                                 onChange={(e) => setVideoUrl(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 transition-colors text-black"
                                 placeholder="https://example.com/video.mp4"
                                 required
                             />
@@ -147,7 +148,7 @@ export default function CreateModule() {
                                             type="text"
                                             value={step.title}
                                             onChange={(e) => updateStep(index, 'title', e.target.value)}
-                                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500"
+                                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
                                             placeholder="Step Title"
                                         />
                                     </div>
@@ -156,7 +157,7 @@ export default function CreateModule() {
                                         <select
                                             value={step.step_type}
                                             onChange={(e) => updateStep(index, 'step_type', e.target.value)}
-                                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500"
+                                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
                                         >
                                             <option value="instruction">Instruction</option>
                                             <option value="action">Action</option>
@@ -170,10 +171,76 @@ export default function CreateModule() {
                                     <textarea
                                         value={step.content}
                                         onChange={(e) => updateStep(index, 'content', e.target.value)}
-                                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 h-20 resize-none"
+                                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 h-20 resize-none text-black"
                                         placeholder="Step instructions..."
                                     />
                                 </div>
+
+                                {/* Assignment Assignment Fields */}
+                                {step.step_type === 'question' && (
+                                    <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                                        <h4 className="text-xs font-bold text-blue-600 uppercase mb-3 flex items-center gap-1">
+                                            <CheckCircle size={14} /> Question Configuration
+                                        </h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-600 mb-1">Question Text</label>
+                                                <input
+                                                    type="text"
+                                                    value={step.assignment?.question_text || ""}
+                                                    onChange={(e) => {
+                                                        const newAssign = { ...step.assignment, question_text: e.target.value };
+                                                        updateStep(index, 'assignment', newAssign);
+                                                    }}
+                                                    className="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
+                                                    placeholder="e.g. Enter the measured length:"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">Correct Value</label>
+                                                    <input
+                                                        type="text"
+                                                        value={step.assignment?.correct_value || ""}
+                                                        onChange={(e) => {
+                                                            const newAssign = { ...step.assignment, correct_value: e.target.value };
+                                                            updateStep(index, 'assignment', newAssign);
+                                                        }}
+                                                        className="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
+                                                        placeholder="e.g. 15.0"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">Tolerance (+/-)</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={step.assignment?.tolerance || ""}
+                                                        onChange={(e) => {
+                                                            const newAssign = { ...step.assignment, tolerance: parseFloat(e.target.value) };
+                                                            updateStep(index, 'assignment', newAssign);
+                                                        }}
+                                                        className="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
+                                                        placeholder="Optional"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">Unit</label>
+                                                    <input
+                                                        type="text"
+                                                        value={step.assignment?.unit || ""}
+                                                        onChange={(e) => {
+                                                            const newAssign = { ...step.assignment, unit: e.target.value };
+                                                            updateStep(index, 'assignment', newAssign);
+                                                        }}
+                                                        className="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm outline-none focus:border-blue-500 text-black"
+                                                        placeholder="e.g. mm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
 

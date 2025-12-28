@@ -5,54 +5,33 @@ import { useParams } from 'next/navigation';
 import ModulePlayer from '@/components/ModulePlayer';
 import CommentSection from '@/components/CommentSection';
 
-// Mock data fetcher (replace with API calls)
-const fetchModule = async (id: string) => {
-    // In real app: fetch(`/api/v1/modules/${id}`)
-    return {
-        id: parseInt(id),
-        title: "Spring Measurement Basics",
-        description: "Learn how to accurately measure spring length using digital calipers.",
-        steps: [
-            {
-                id: 1,
-                title: "Prepare the Caliper",
-                content: "Ensure the digital caliper is zeroed out before starting. Close the jaws completely and press the 'Zero' button.",
-                step_type: "instruction",
-                media_url: "https://placehold.co/600x400/000000/FFF?text=Zero+Caliper"
-            },
-            {
-                id: 2,
-                title: "Measure Free Length",
-                content: "Place the spring between the jaws. Gently close the jaws until they touch the spring ends. Do not compress the spring.",
-                step_type: "action",
-                media_url: "https://placehold.co/600x400/000000/FFF?text=Measure+Spring"
-            },
-            {
-                id: 3,
-                title: "Record Measurement",
-                content: "Read the value on the display. The expected length is 15.0 cm.",
-                step_type: "question",
-                assignment: {
-                    question_text: "Enter the measured length:",
-                    correct_value: "15.0",
-                    tolerance: 0.2,
-                    unit: "cm"
-                }
-            }
-        ]
-    };
-};
+import { useAuth } from '@/context/AuthContext';
 
 export default function ModulePage() {
     const params = useParams();
+    const { token } = useAuth();
     const [module, setModule] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
 
     useEffect(() => {
-        if (params.id) {
-            fetchModule(params.id as string).then(setModule);
-        }
-    }, [params.id]);
+        const fetchModuleData = async () => {
+            if (!params.id || !token) return;
+            try {
+                const res = await fetch(`http://localhost:8000/api/v1/modules/${params.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setModule(data);
+                } else {
+                    console.error("Failed to load module");
+                }
+            } catch (err) {
+                console.error("Error loading module:", err);
+            }
+        };
+        fetchModuleData();
+    }, [params.id, token]);
 
     const handleStepSubmit = async (stepId: number, value: string) => {
         // Mock API call
@@ -93,7 +72,7 @@ export default function ModulePage() {
                 <p className="text-slate-400">{module.description}</p>
             </header>
 
-            <ModulePlayer steps={module.steps} onStepSubmit={handleStepSubmit} />
+            <ModulePlayer steps={module.steps} videoUrl={module.video_url} onStepSubmit={handleStepSubmit} />
 
             <CommentSection moduleId={module.id} comments={comments} onAddComment={handleAddComment} />
         </main>

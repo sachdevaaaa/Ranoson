@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         });
     }, []);
 
-    if (user?.role_id !== 3) {
+    if (user?.role_id !== 1) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="text-center">

@@ -54,24 +54,19 @@ def login(user_data: schemas.UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.employee_code})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/auth/me")
+@router.get("/auth/me", response_model=schemas.UserMe)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    try:
-        role_id = getattr(current_user, "role_id", None)
-        if role_id is None:
-            role_id = 0
+    return current_user
 
-        safe_user = {
-            "id": getattr(current_user, "id", None),
-            "employee_code": getattr(current_user, "employee_code", None),
-            "full_name": getattr(current_user, "full_name", None) if hasattr(current_user, "full_name") else None,
-            "role_id": int(role_id) if role_id is not None else 0,
-            "is_registered": getattr(current_user, "is_registered", False),
-            "progress": [],
-        }
-        return safe_user
-    except Exception:
-        raise HTTPException(status_code=500, detail="Error preparing user info")
+# --- Admin: User Management ---
+
+@router.post("/assignments", response_model=schemas.UserProgress)
+def assign_module(request: schemas.AssignModuleRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # TODO: Check if current_user is Admin
+    if current_user.role_id != 1:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return crud.assign_module_to_user(db, request.user_id, request.module_id)
 
 # --- Admin: User Management ---
 
