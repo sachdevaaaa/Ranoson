@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 # Secret key for JWT (should be in env)
 SECRET_KEY = "supersecretkeywhichshouldbechanged"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 10080 # 7 days
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

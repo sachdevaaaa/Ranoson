@@ -58,6 +58,9 @@ export default function CreateModule() {
 
             if (res.ok) {
                 router.push('/admin');
+            } else if (res.status === 401) {
+                alert("Session expired. Please log in again.");
+                router.push('/login');
             } else {
                 alert("Failed to create module");
             }

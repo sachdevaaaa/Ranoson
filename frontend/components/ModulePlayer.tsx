@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { CheckCircle, XCircle, ArrowRight, Play } from 'lucide-react';
 
@@ -27,10 +27,16 @@ interface ModulePlayerProps {
 }
 
 export default function ModulePlayer({ steps, videoUrl, onStepSubmit }: ModulePlayerProps) {
+  // console.log("ModulePlayer videoUrl:", videoUrl); // DEBUG LOG
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [feedback, setFeedback] = useState<{ passed: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -66,12 +72,12 @@ export default function ModulePlayer({ steps, videoUrl, onStepSubmit }: ModulePl
     <div className="flex h-[600px] bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
       {/* Left: Media/Context */}
       <div className="w-1/2 bg-black relative flex items-center justify-center">
-        {videoUrl ? (
+        {isMounted && videoUrl ? (
           <ReactPlayer
             url={videoUrl}
             width="100%"
             height="100%"
-            controls
+            controls={true}
             playing={false}
           />
         ) : currentStep.media_url ? (

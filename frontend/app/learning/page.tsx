@@ -2,50 +2,83 @@
 
 import React, { useEffect, useState } from 'react';
 import ResourceCard from '@/components/ResourceCard';
+import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { useAuth } from '@/context/AuthContext';
 
-// Mock fetcher
-const fetchResources = async () => {
-    // In real app: fetch('/api/v1/resources')
-    return [
-        {
-            id: 1,
-            title: "What is a Spring?",
-            description: "Understanding the physics and basic definition of a spring.",
-            resource_type: "article",
-            content: "# What is a Spring?\nA spring is an elastic object that stores mechanical energy...",
-            image_url: "https://placehold.co/600x400/2563eb/FFF?text=Spring+Physics"
-        },
-        {
-            id: 2,
-            title: "Types of Springs",
-            description: "Overview of Compression, Extension, and Torsion springs.",
-            resource_type: "article",
-            content: "# Types of Springs\n## Compression Springs\n...",
-            image_url: "https://placehold.co/600x400/16a34a/FFF?text=Spring+Types"
-        },
-        {
-            id: 3,
-            title: "Ranoson Official Website",
-            description: "Visit our official website for more product details.",
-            resource_type: "link",
-            content: "https://ranoson.in",
-            image_url: "https://placehold.co/600x400/ea580c/FFF?text=Ranoson+Website"
-        }
-    ];
+// Helper to get YouTube thumbnail
+const getYouTubeThumbnail = (url: string) => {
+    if (!url) return undefined;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11)
+        ? `https://img.youtube.com/vi/${match[2]}/0.jpg`
+        : undefined;
 };
 
 export default function LearningPage() {
     const [resources, setResources] = useState<any[]>([]);
     const [selectedResource, setSelectedResource] = useState<any>(null);
+    const { token } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
-        fetchResources().then(setResources);
-    }, []);
+        const fetchContent = async () => {
+            if (!token) return;
+
+            try {
+                // Fetch Modules (real training modules)
+                const modulesRes = await fetch('http://localhost:8000/api/v1/modules', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Fetch other resources (articles, links) if endpoint exists
+                // For now, we'll just show modules, or you can keep the mock resources as well if needed.
+                // Let's mix them or focus on modules as requested.
+
+                let combinedResources: any[] = [];
+
+                if (modulesRes.ok) {
+                    const modules = await modulesRes.json();
+                    const moduleResources = modules.map((m: any) => ({
+                        id: m.id,
+                        title: m.title,
+                        description: m.description,
+                        resource_type: 'video', // Modules are primarily video/interactive
+                        content: m.video_url, // For linking
+                        image_url: getYouTubeThumbnail(m.video_url) || "https://placehold.co/600x400/2563eb/FFF?text=Module",
+                        isModule: true
+                    }));
+                    combinedResources = [...combinedResources, ...moduleResources];
+                }
+
+                // Append static resources (or fetch from /api/v1/resources if implemented)
+                const staticResources = [
+                    {
+                        id: 101,
+                        title: "Ranoson Official Website",
+                        description: "Visit our official website for more product details.",
+                        resource_type: "link",
+                        content: "https://ranoson.in",
+                        image_url: "https://placehold.co/600x400/ea580c/FFF?text=Ranoson+Website",
+                        isModule: false
+                    }
+                ];
+
+                setResources([...combinedResources, ...staticResources]);
+
+            } catch (error) {
+                console.error("Failed to fetch learning content", error);
+            }
+        };
+
+        fetchContent();
+    }, [token]);
 
     const handleResourceClick = (resource: any) => {
-        if (resource.resource_type === 'link') {
+        if (resource.isModule) {
+            router.push(`/modules/${resource.id}`);
+        } else if (resource.resource_type === 'link') {
             window.open(resource.content, '_blank');
         } else {
             setSelectedResource(resource);
@@ -56,7 +89,7 @@ export default function LearningPage() {
         <main className="min-h-screen bg-slate-50 p-6 pb-24">
             <header className="mb-8">
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">Learning Center</h1>
-                <p className="text-slate-500">Explore articles, guides, and external resources.</p>
+                <p className="text-slate-500">Explore training modules, guides, and resources.</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,7 +112,6 @@ export default function LearningPage() {
                             </button>
                         </div>
                         <div className="p-6 overflow-y-auto prose prose-slate max-w-none">
-                            {/* In a real app, use a proper Markdown renderer like react-markdown */}
                             <div className="whitespace-pre-wrap font-sans text-slate-600">
                                 {selectedResource.content}
                             </div>
